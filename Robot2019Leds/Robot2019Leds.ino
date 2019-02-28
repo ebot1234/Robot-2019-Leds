@@ -9,64 +9,52 @@
 #define DATA_PIN2 4
 
 char IData;
-int fadeAmount = 5; //Can set this to 5, 10, 15, 20, 25
-int brightness = 0;
 
 CRGB leds1[NUM_LEDS];
 CRGB leds2[NUM_LEDS];
 CRGB leds3[NUM_LEDS2];
 
-unsigned long startMillis;
-unsigned long currentMillis;
-const unsigned long period = 1000;
 void setup()
 {
-  startMillis = millis();
+  //Starts the serial library
   Serial.begin(9600);
- // Wire.begin(8);
-  //Wire.onReceive(receiveEvent);
-  
+  //Sets up the led strips
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds1, NUM_LEDS);// Elevator Left
   FastLED.addLeds<WS2812B, DATA_PIN1, GRB>(leds2, NUM_LEDS); //Elevator Right
   FastLED.addLeds<WS2812B, DATA_PIN2, GRB>(leds3, NUM_LEDS2); //Electrical Board
+  //Starts receiving data over i2c
+  Wire.begin(8);
+  Wire.onReceive(receiveEvent);
 }
 
 void loop()
 {
  switch(IData){
-    case 'r': //All Red
-      allColor(CRGB::Red);
+    case 'r': 
+      AllRed();
       break;
     case 'g': //All Green
-      allColor(CRGB::Green);
+      AllGreen();
       break;
     case 'b': //All Blue
-      allColor(CRGB::Blue);
+      AllBlue();
       break;
-    case 'u': 
-      rainbowAll();
+    case 'u': //All Rainbow
+      RainbowAllStrips();
       break;
     case 'c': // Rainbow E Board, Blink Green at top
-      rainbowEBoard();
-      colorWipeF(CRGB::Green, 46, 10);
-      colorWipeB(CRGB::Green, 57, 10);
+      ElevatorUp();
       break;
     case 'h': //Rainbow E Board, Blink Red at Bottom
-      
+      ElevatorDown();
       break;
-    case 'w':
-      
+    case 'w': //Random Chase
+      RandomChase();
       break;
-    case 'o': 
-      allColor(CRGB::Black);
+    case 'o': //All Leds Off
+      AllOff();
       break;
-
-     //pulse(CRGB::Blue, 0, 10);
-  
-
-rainbowElevator(0, 10);
-  //colorWipe(CRGB::Blue, 11, 10);
- // blink(CRGB::Red);
+  }
   FastLED.show();
 }
 
@@ -79,6 +67,8 @@ void receiveEvent(int howMany){
   }
 }
 
+//****** Color Patterns ********
+
 void allColor(CRGB color){
   for(int i = 0; i < NUM_LEDS; i++){
       leds1[i] = color;
@@ -88,51 +78,29 @@ void allColor(CRGB color){
     FastLED.show();
 }
 //Color Wipes Forward
-void colorWipeF(CRGB color, int first, int num){
+void colorWipeF(CRGB color, int first, int num, CRGB leds){
   for(uint16_t i = 0; i < num; i++){
       uint8_t c = (millis() / 5) + (i * 10);
       if(c > 128) 
       {c = 0;
-      leds1[i + first] = color;
-      leds2[i+ first] = color;
+      leds[i + first] = color;
       }
       else {
-        leds1[i +first] = CRGB::Black;
-        leds2[i + first] = CRGB::Black;
+        leds[i +first] = CRGB::Black;
        }
     }
 }
 //Color Wipes Backward
-void colorWipeB(CRGB color, int first, int num){
+void colorWipeB(CRGB color, int first, int num, CRGB leds){
   for(uint16_t i =0; i < num; i++){
     uint8_t c = (millis() / 5) + (i * 10);
     if(c > 128){
-      leds1[num-1-i];
-      leds2[num-1-i];
+      leds[num-1-i];
     }
     else{
-        leds1[i + first] = CRGB::Black;
-        leds2[i + first] = CRGB::Black;
+        leds[i + first] = CRGB::Black;
       }  
   }
-}
-
-//Need to test
-void pulse(CRGB c, int first, int num){
-  currentMillis = millis();
-  for(int i = 0; i < num; i++){
-    if(currentMillis - startMillis >= period){
-      leds1[i] = c;
-      leds[i].fadeLightBy(brightness);
-      startMillis = currentMillis;
-      }
-    }
-    FastLED.show();
-    brightness = brightness + fadeAmount;
-    if(brightness == 0 || brightness == 255){
-        fadeAmount =-fadeAmount;
-      }
-      delay(20);
 }
 
 void rainbowAll(){
@@ -156,4 +124,83 @@ void rainbowEBoard(){
   for(uint16_t i=0; i< NUM_LEDS; i++){
       leds3[i] = CHSV((millis() / 10) - (i * 3), 255, 255);
     }  
+}
+
+CRGB Wheel(byte WheelPos) {
+  if(WheelPos < 85) {
+    return CRGB(WheelPos * 3, 255 - WheelPos * 3, 0);
+  } 
+  else if(WheelPos < 170) {
+    WheelPos -= 85;
+    return CRGB(255 - WheelPos * 3, 0, WheelPos * 3);
+  } 
+  else {
+    WheelPos -= 170;
+    return CRGB(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+}
+
+CRGB randomColor(){
+  return Wheel(random(256)); 
+}
+
+//*********User Modes ***********
+void AllRed(){
+  allColor(CRGB::Red);
+  FastLED.show();
+  Serial.println("All Red");
+}
+
+void AllBlue(){
+  allColor(CRGB::Blue);
+  FastLED.show();
+  Serial.println("All Blue");
+}
+
+void AllGreen(){
+  allColor(CRGB::Green);
+  FastLED.show();
+  Serial.println("All Green");  
+}
+
+void RainbowAllStrips(){
+  rainbowAll();
+  FastLED.show();
+  Serial.println("Rainbow All");
+}
+
+void ElevatorUp(){
+   rainbowEBoard();
+   colorWipeB(CRGB::Green, 40, 16, leds1);
+   colorWipeF(CRGB::Green, 73, 16, leds1); // might need to change to 53
+   colorWipeB(CRGB::Green, 40, 16, leds2);
+   colorWipeF(CRGB::Green, 73, 16, leds2); // might need to change to 53
+   rainbowElevator(0, 39);
+   rainbowElevator(73, 39);
+   FastLED.show();
+   Serial.println("Elevator is up");
+}
+
+void ElevatorDown(){
+  rainbowEBoard();
+  colorWipeF(CRGB::Red, 0, 16, leds1);
+  colorWipeF(CRGB::Red, 0, 16, leds2);
+  colorWipeB(CRGB::Red, 112, 16, leds1);
+  colorWipeB(CRGB::Red, 112, 16, leds2);
+  rainbowElevator(17, 36); // might need to fix
+  rainbowElevator(53, 16);
+  FastLED.show();
+  Serial.println("Elevator is down");
+}
+
+void RandomChase(){
+  colorWipeF(randomColor, 0, 112, leds1);
+  colorWipeF(randomColor, 0, 112, leds2);
+  FastLED.show();
+  Serial.println("Random Chase");
+}
+
+void AllOff(){
+  allColor(CRGB::Black);
+  Serial.println("All Off");  
 }

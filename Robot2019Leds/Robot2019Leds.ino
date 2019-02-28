@@ -8,14 +8,6 @@
 #define DATA_PIN1 7
 #define DATA_PIN2 4
 
-#define FORWARD 0
-#define BACKWARD 1
-#define SLOW 250
-#define MEDIUM 50
-#define FAST 5
-
-boolean direction = FORWARD;
-
 char IData;
 
 CRGB leds1[NUM_LEDS];
@@ -90,8 +82,8 @@ void allColor(CRGB color){
     }  
     FastLED.show();
 }
-
-void colorWipe(CRGB color, int first, int num){
+//Color Wipes Forward
+void colorWipeF(CRGB color, int first, int num){
   for(uint16_t i = 0; i < num; i++){
       uint8_t c = (millis() / 5) + (i * 10);
       if(c > 128) 
@@ -105,6 +97,21 @@ void colorWipe(CRGB color, int first, int num){
        }
     }
 }
+//Color Wipes Backward
+void colorWipeB(CRGB color, int first, int num){
+  for(uint16_t i =0; i < num; i++){
+    uint8_t c = (millis() / 5) + (i * 10);
+    if(c > 128){
+      leds1[num-1-i];
+      leds2[num-1-i];
+    }
+    else{
+        leds1[i + first] = CRGB::Black;
+        leds2[i + first] = CRGB::Black;
+      }  
+  }
+}
+
 int brightness = 0;
 int fadeAmount = 1;
 

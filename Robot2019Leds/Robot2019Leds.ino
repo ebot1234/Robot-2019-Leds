@@ -9,14 +9,19 @@
 #define DATA_PIN2 4
 
 char IData;
+int fadeAmount = 5; //Can set this to 5, 10, 15, 20, 25
+int brightness = 0;
 
 CRGB leds1[NUM_LEDS];
 CRGB leds2[NUM_LEDS];
 CRGB leds3[NUM_LEDS2];
 
-
+unsigned long startMillis;
+unsigned long currentMillis;
+const unsigned long period = 1000;
 void setup()
 {
+  startMillis = millis();
   Serial.begin(9600);
  // Wire.begin(8);
   //Wire.onReceive(receiveEvent);
@@ -28,7 +33,7 @@ void setup()
 
 void loop()
 {
- /*switch(IData){
+ switch(IData){
     case 'r': //All Red
       allColor(CRGB::Red);
       break;
@@ -43,8 +48,8 @@ void loop()
       break;
     case 'c': // Rainbow E Board, Blink Green at top
       rainbowEBoard();
-      colorWipe(CRGB::Green, 46, 10);
-      colorWipe(CRGB::Green, 57, 10);
+      colorWipeF(CRGB::Green, 46, 10);
+      colorWipeB(CRGB::Green, 57, 10);
       break;
     case 'h': //Rainbow E Board, Blink Red at Bottom
       
@@ -54,9 +59,9 @@ void loop()
       break;
     case 'o': 
       allColor(CRGB::Black);
-      break;*/
+      break;
 
-      //pulse(CRGB::Red, 0, 10);
+     //pulse(CRGB::Blue, 0, 10);
   
 
 rainbowElevator(0, 10);
@@ -112,18 +117,22 @@ void colorWipeB(CRGB color, int first, int num){
   }
 }
 
-int brightness = 0;
-int fadeAmount = 1;
-
+//Need to test
 void pulse(CRGB c, int first, int num){
-  for(int i = 0; i<num; i++){
-      brightness = brightness + fadeAmount;
-
-      if(brightness == 0 || brightness == 255){
-        fadeAmount =- fadeAmount;
-        }
-        FastLED.show();
-    }  
+  currentMillis = millis();
+  for(int i = 0; i < num; i++){
+    if(currentMillis - startMillis >= period){
+      leds1[i] = c;
+      leds[i].fadeLightBy(brightness);
+      startMillis = currentMillis;
+      }
+    }
+    FastLED.show();
+    brightness = brightness + fadeAmount;
+    if(brightness == 0 || brightness == 255){
+        fadeAmount =-fadeAmount;
+      }
+      delay(20);
 }
 
 void rainbowAll(){

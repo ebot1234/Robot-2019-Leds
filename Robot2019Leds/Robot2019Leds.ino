@@ -20,8 +20,8 @@ void setup()
   Serial.begin(9600);
   //Sets up the led strips
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds1, NUM_LEDS);// Elevator Left
-  FastLED.addLeds<WS2812B, DATA_PIN1, GRB>(leds2, NUM_LEDS); //Elevator Right
-  FastLED.addLeds<WS2812B, DATA_PIN2, GRB>(leds3, NUM_LEDS2); //Electrical Board
+  FastLED.addLeds<WS2812B, DATA_PIN1, GRB>(leds3, NUM_LEDS); //Elevator Right
+  FastLED.addLeds<WS2812B, DATA_PIN2, GRB>(leds2, NUM_LEDS); //Electrical Board
   //Starts receiving data over i2c
   Wire.begin(8);
   Wire.onReceive(receiveEvent);
@@ -29,7 +29,7 @@ void setup()
 
 void loop()
 {
- switch(IData){
+ /*switch(IData){
     case 'r': 
       AllRed();
       break;
@@ -54,7 +54,8 @@ void loop()
     case 'o': //All Leds Off
       AllOff();
       break;
-  }
+  }*/
+  rainbowAll();
   FastLED.show();
 }
 
